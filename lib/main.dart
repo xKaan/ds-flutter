@@ -1,7 +1,7 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart'; // Importez LoginScreen
+import 'screens/start_screen.dart';
 
 void main() {
   runApp(const LoginApp());
@@ -30,7 +30,7 @@ class LoginApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(title: 'Page de Connexion'),
+      home: const StartScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

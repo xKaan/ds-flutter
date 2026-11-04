@@ -16,6 +16,8 @@ class ApiConfig {
   }
 
   static Uri get loginUri => Uri.parse('$baseUrl/login.php');
+  static Uri get meUri => Uri.parse('$baseUrl/me.php');
+  static Uri get logoutUri => Uri.parse('$baseUrl/logout.php');
 
   static const Duration timeout = Duration(seconds: 10);
 }

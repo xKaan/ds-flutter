@@ -47,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // L'écran a pu être fermé pendant l'appel réseau
       if (!mounted) return;
 
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => ProfileScreen(user: user)),
       );

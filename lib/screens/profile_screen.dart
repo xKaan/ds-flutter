@@ -3,11 +3,26 @@
 import 'package:flutter/material.dart';
 
 import '../models/user.dart';
+import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final User user;
 
   const ProfileScreen({super.key, required this.user});
+
+  void _logout(BuildContext context) async {
+    await AuthService().logout();
+
+    if (!context.mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(title: 'Page de Connexion'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +32,7 @@ class ProfileScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Action de déconnexion
-              Navigator.pop(context);
-            },
+            onPressed: () => _logout(context),
           ),
         ],
       ),
@@ -66,10 +78,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24.0),
                   FilledButton(
-                    onPressed: () {
-                      // Déconnexion en retournant à l'écran de connexion
-                      Navigator.pop(context);
-                    },
+                    onPressed: () => _logout(context),
                     child: const Text('Se déconnecter'),
                   ),
                 ],
