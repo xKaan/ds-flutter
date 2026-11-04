@@ -98,3 +98,7 @@ flutter run --dart-define=API_BASE_URL=https://mon-serveur.fr
   ```
 
 ## Captures d'écran
+
+| Connexion | Mot de passe visible | Erreur | Profil |
+|---|---|---|---|
+| ![Connexion](docs/screenshots/connexion.png) | ![Mot de passe visible](docs/screenshots/connexion_mdp_visible.png) | ![Erreur](docs/screenshots/connexion_erreur.png) | ![Profil](docs/screenshots/profil.png) |
