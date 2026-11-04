@@ -1,6 +1,7 @@
 // lib/screens/login_screen.dart
 
 import 'package:flutter/material.dart';
+import '../models/user.dart';
 import '../services/auth_service.dart'; // Importez AuthService
 import 'profile_screen.dart'; // Importez ProfileScreen
 
@@ -22,51 +23,57 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false; // État de chargement
 
-  // Méthode de connexion
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   void _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      String email = _emailController.text.trim();
-      String password = _passwordController.text.trim();
+    setState(() {
+      _isLoading = true;
+    });
 
-      final user = await _authService.login(email, password);
-      setState(() {
-        _isLoading = false;
-      });
+    String email = _emailController.text.trim();
+    String password = _passwordController.text;
 
-      if (user != null) {
-        // Connexion réussie avec informations supplémentaires
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProfileScreen(
-              email: email,
-              firstName: user['firstName'],
-              lastName: user['lastName'],
-              role: user['role'],
-            ),
-          ),
-        );
-      } else {
-        // Connexion échouée
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Erreur'),
-            content: const Text('Email ou mot de passe incorrect'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
+    try {
+      User user = await _authService.login(email, password);
+
+      // L'écran a pu être fermé pendant l'appel réseau
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfileScreen(user: user)),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      _showError(e.message);
     }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _showError(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
