@@ -1,49 +1,67 @@
 // lib/services/auth_service.dart
 
+import 'dart:async';
 import 'dart:convert';
-import 'package:crypto/crypto.dart';
+
+import 'package:http/http.dart' as http;
+
+import '../config/api_config.dart';
+import '../models/user.dart';
+
+class AuthException implements Exception {
+  final String message;
+
+  const AuthException(this.message);
+
+  @override
+  String toString() => message;
+}
 
 class AuthService {
-  // Méthode de hachage des mots de passe
-  String hashPassword(String password) {
-    final bytes = utf8.encode(password); // Convertit le mot de passe en bytes
-    final digest = sha256.convert(bytes); // Applique SHA-256
-    return digest.toString(); // Retourne le hachage en chaîne hexadécimale
-  }
+  final http.Client _client;
 
-  // Tableau associatif local des utilisateurs avec mots de passe hachés
-  final Map<String, Map<String, dynamic>> _users = {
-    'jean@example.com': {
-      'password': '', // Sera initialisé dans le constructeur
-      'firstName': 'Jean',
-      'lastName': 'DUPONT',
-      'role': 'User'
-    },
-    'julie@example.com': {
-      'password': '',
-      'firstName': 'Julie',
-      'lastName': 'MARTIN',
-      'role': 'Admin',
-    },
-  };
+  AuthService({http.Client? client}) : _client = client ?? http.Client();
 
-  AuthService() {
-    // Initialiser les mots de passe hachés
-    _users['jean@example.com']!['password'] = hashPassword('userpass');
-    _users['julie@example.com']!['password'] = hashPassword('adminpass');
-  }
+  // Retourne l'utilisateur connecté, lève une AuthException sinon
+  Future<User> login(String email, String password) async {
+    final http.Response response;
 
-  // Méthode de connexion
-  Future<Map<String, dynamic>?> login(String email, String password) async {
-    // Simule un délai pour imiter un appel réseau
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      response = await _client
+          .post(
+            ApiConfig.loginUri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'email': email, 'password': password}),
+          )
+          .timeout(ApiConfig.timeout);
+    } on TimeoutException {
+      throw const AuthException('Le serveur ne répond pas');
+    } on http.ClientException {
+      throw const AuthException('Impossible de joindre le serveur');
+    }
 
-    if (_users.containsKey(email)) {
-      String hashedPassword = hashPassword(password);
-      if (_users[email]!['password'] == hashedPassword) {
-        return _users[email];
+    final Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw const AuthException('Réponse du serveur invalide');
+    }
+
+    if (response.statusCode == 200 && data['status'] == 200) {
+      try {
+        return User.fromJson(data);
+      } on FormatException {
+        throw const AuthException('Réponse du serveur invalide');
       }
     }
-    return null;
+
+    if (response.statusCode == 400) {
+      throw const AuthException('Email ou mot de passe incorrect');
+    }
+
+    throw const AuthException('Erreur serveur, réessayez plus tard');
   }
 }
